@@ -1,3 +1,4 @@
+import math
 import pygame
 import random
 import sys
@@ -36,16 +37,14 @@ class Paddle():
 class Ball():
     def __init__ (self):
         self.pos = [int(width/2), int(height/2)]
-        #Two while loops to handle 0 speed in x and y directions
-        self.velocity = [random.randint(-10,10), random.randint(-10,10)]
-        while self.velocity[0] == 0:
-            self.velocity = [random.randint(-10, 10), self.velocity[1]]
-        while self.velocity[1] == 0:
-            self.velocity = [self.velocity[0], random.randint(-10, 10)]
+        self.angle = math.radians(145)
+        self.speed = 10
+        self.velocity = [int(self.speed * math.cos(self.angle)), int(self.speed * math.sin(self.angle))]
 
         self.radius = 10
         self.hitbox = pygame.Rect(self.pos[0] - self.radius, self.pos[1] + self.radius, self.radius * 2, self.radius * 2)
 
+        #self.resetVel()
 
     def move(self):
         self.pos = (self.velocity[0] + self.pos[0], self.velocity[1] + self.pos[1])
@@ -55,6 +54,26 @@ class Ball():
         pygame.draw.circle(screen, (255, 255, 255), self.pos, self.radius, 0)
         self.hitbox = pygame.Rect(self.pos[0] - self.radius, self.pos[1] + self.radius, self.radius * 2, self.radius * 2)
 
+    def resetVel(self):
+        # Use random to make the velocity pointed in either the 1st or the 3rd quarter
+        self.angle = random.randint(100, 135)
+
+        rand = random.random()
+        if rand < .25:
+            pass
+            if rand < .5:
+                self.angle = self.angle + 45
+                if rand < .75:
+                    self.angle = self.angle + 135
+                else:
+                    self.angle = self.angle + 180
+        self.angle = math.radians(self.angle)
+        print("angle", self.angle)
+
+
+        self.velocity = [int(self.speed * math.cos(self.angle)), int(self.speed * math.sin(self.angle))]
+
+        print(self.angle, self.velocity)
 
 paddleLeft = Paddle((50, 250))
 paddleRight = Paddle((width - 50, 250))
@@ -106,12 +125,8 @@ while True:
         elif ball.pos[0] > width:
             score[1] = score[1] + 1
         ball.pos = [int(width / 2), int(height / 2)]
-        # Two while loops to handle 0 speed in x and y directions
-        ball.velocity = [random.randint(-10, 10), random.randint(-10, 10)]
-        while ball.velocity[0] == 0:
-            ball.velocity = [random.randint(-10, 10), ball.velocity[1]]
-        while ball.velocity[1] == 0:
-            ball.velocity = [ball.velocity[0], random.randint(-10, 10)]
+        # Reset the ball's velocity to something random
+        ball.resetVel()
 
     # Bounce the ball off the ceiling
     if ball.pos[1] > height - ball.radius:
@@ -139,7 +154,7 @@ while True:
     # Right paddle's score
     text = font.render("Score: " + str(score[0]), True, (255, 255, 255), (0, 0, 0))
     screen.blit(text, (width - text.get_rect()[2] - 10,0))
-    
+
     # Displaying the paddles and the ball
     ball.display()
     paddleLeft.display()
@@ -149,3 +164,6 @@ while True:
     ball.move()
     paddleLeft.move(10)
 
+    #Todo
+    # Implement an actual AI for one of the paddles
+    # Make it so W and S move the left paddle while Up and Down move the right paddle
