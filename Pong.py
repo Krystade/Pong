@@ -14,6 +14,8 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 50)
 score = [0, 0]
 
+AI = False
+
 class Paddle():
     def __init__ (self, pos):
         self.pos = pos
@@ -68,12 +70,8 @@ class Ball():
                 else:
                     self.angle = self.angle + 180
         self.angle = math.radians(self.angle)
-        print("angle", self.angle)
-
 
         self.velocity = [int(self.speed * math.cos(self.angle)), int(self.speed * math.sin(self.angle))]
-
-        print(self.angle, self.velocity)
 
 paddleLeft = Paddle((50, 250))
 paddleRight = Paddle((width - 50, 250))
@@ -96,30 +94,48 @@ while True:
     # Speed of the game
     clock.tick(60)
 
-    # Check for keypress to see if the user wants to change direction
+    # If the AI is on bounce the left paddle between the roof and ceiling
+    if AI:
+        if paddleLeft.pos[1] >= height - paddleLeft.height and paddleLeft.direction == 1:
+            paddleLeft.direction = -1
+        elif paddleLeft.pos[1] <= 0 and paddleLeft.direction == -1:
+            paddleLeft.direction = 1
+    # Allows for two people to play at the same time
+    else:
+        key = pygame.key.get_pressed()
+
+        # Check for keypress to see if the left player wants to change direction
+        if key[pygame.K_w]:
+            paddleLeft.move(10)
+        # DOWN
+        elif key[pygame.K_s]:
+            paddleLeft.move(-10)
+        else:
+            pass
+    # Check for keypress to see if the right player wants to change direction
     key = pygame.key.get_pressed()
     # UP
-    if key[pygame.K_UP] or key[pygame.K_w]:
+    if key[pygame.K_UP]:
         paddleRight.move(10)
     # DOWN
-    elif key[pygame.K_DOWN] or key[pygame.K_s]:
+    elif key[pygame.K_DOWN]:
         paddleRight.move(-10)
 
-    # Make sure the paddle doesn't go off screen
+    # Make sure the Right paddle doesn't go off screen
     if paddleRight.pos[1] <= 0:
         paddleRight.pos = (paddleRight.pos[0], 0)
     if paddleRight.pos[1] >= height - paddleRight.height:
         paddleRight.pos = (paddleRight.pos[0], height - paddleRight.height)
+    # Make sure the Left paddle doesn't go off screen
+    if paddleLeft.pos[1] <= 0:
+        paddleLeft.pos = (paddleLeft.pos[0], 0)
+    if paddleLeft.pos[1] >= height - paddleLeft.height:
+        paddleLeft.pos = (paddleLeft.pos[0], height - paddleLeft.height)
 
-    # Bounce the left paddle
-    if paddleLeft.pos[1] >= height - paddleLeft.height and paddleLeft.direction == 1:
-        paddleLeft.direction = -1
-    elif paddleLeft.pos[1] <= 0 and paddleLeft.direction == -1:
-        paddleLeft.direction = 1
+
 
     # Reset the ball if it goes off screen
     if ball.pos[0] > width + ball.radius or ball.pos[0] < -ball.radius:
-        print(score)
         if ball.pos[0] < 0:
             score[0] = score[0] + 1
         elif ball.pos[0] > width:
@@ -140,12 +156,12 @@ while True:
     if paddleRight.hitbox.colliderect(ball.hitbox):
         ball.pos = (paddleRight.pos[0] - ball.radius, ball.pos[1])
         ball.velocity = (-ball.velocity[0], ball.velocity[1])
-        print("Hits right paddle")
+        #print("Hits right paddle")
         # Bounce the ball off the left paddles
     if paddleLeft.hitbox.colliderect(ball.hitbox):
         ball.pos = (paddleLeft.pos[0] + ball.radius + paddleLeft.width, ball.pos[1])
         ball.velocity = (-ball.velocity[0], ball.velocity[1])
-        print("Hits left paddle")
+        #print("Hits left paddle")
 
     # Printing the scores
     # Left paddle's score
@@ -162,8 +178,8 @@ while True:
 
     # Moving the paddles and the ball
     ball.move()
-    paddleLeft.move(10)
+    if AI:
+        paddleLeft.move(10)
 
     #Todo
     # Implement an actual AI for one of the paddles
-    # Make it so W and S move the left paddle while Up and Down move the right paddle
